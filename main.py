@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ข้อมูล
+# --- ข้อมูลพื้นฐาน ---
 languages = {
     'th': {'name': 'ภาษาไทย', 'flag': '🇹🇭'},
     'my': {'name': 'မြန်မာစာ', 'flag': '🇲🇲'},
@@ -30,41 +30,59 @@ neonatal_diseases = {
         'ภาวะน้ำตาลในเลือดต่ำ',
         'ภาวะตัวเหลือง'
     ]
-    # เพิ่มภาษาอื่นได้ในอนาคต
+    # ภาษาพม่า เขมร อังกฤษ สามารถเพิ่มได้ในอนาคต
 }
 
-# เริ่ม Streamlit App
+# --- เซสชันสำหรับจัดการหน้า ---
+if 'page' not in st.session_state:
+    st.session_state.page = 'language_select'
 if 'language' not in st.session_state:
-    st.session_state.language = None
+    st.session_state.language = 'th'
 
-st.title(\"👶 แอปให้ความรู้สำหรับญาติของทารกแรกเกิด\")
+# --- ฟังก์ชันเปลี่ยนหน้า ---
+def go_to_page(page_name):
+    st.session_state.page = page_name
+    st.experimental_rerun()
 
-# หน้า 1: เลือกภาษา
-if st.session_state.language is None:
-    st.header(\"🌐 กรุณาเลือกภาษา / Please select a language:\")
-    for code, info in languages.items():
-        if st.button(f\"{info['flag']} {info['name']}\"):
-            st.session_state.language = code
-            st.rerun()
+# --- หน้าเลือกภาษา ---
+if st.session_state.page == 'language_select':
+    st.title('👶 ระบบให้คำแนะนำสำหรับญาติทารกแรกเกิด')
+    st.subheader('🌐 กรุณาเลือกภาษา / Please select a language:')
+    cols = st.columns(4)
+    for i, (code, info) in enumerate(languages.items()):
+        with cols[i]:
+            if st.button(f\"{info['flag']}\\n{info['name']}\"):
+                st.session_state.language = code
+                go_to_page('main_menu')
 
-# หน้า 2: เมนูหัวข้อ
-else:
+# --- หน้าหลักเมนู ---
+elif st.session_state.page == 'main_menu':
     lang = st.session_state.language
-    st.header(f\"{languages[lang]['flag']} {languages[lang]['name']}\")
-    
+    st.markdown(f\"## {languages[lang]['flag']} {languages[lang]['name']}\")
     st.subheader(\"📋 กรุณาเลือกหัวข้อ:\")
-    topic = st.radio(\"\", main_topics[lang])
+    if st.button(main_topics[lang][0]):
+        go_to_page('video')
+    if st.button(main_topics[lang][1]):
+        go_to_page('disease_list')
+    if st.button('🔄 เปลี่ยนภาษา / Change Language'):
+        go_to_page('language_select')
 
-    # หน้า 3: วิดีโอคำแนะนำ
-    if topic == main_topics[lang][0]:
-        st.markdown(\"\"\"<iframe width='100%' height='315' src='{}' frameborder='0' allowfullscreen></iframe>\"\"\".format(videos[lang]), unsafe_allow_html=True)
-        if st.button(\"🔙 กลับเมนู / Back to Menu\"):
-            st.rerun()
+# --- หน้าวิดีโอคำแนะนำ ---
+elif st.session_state.page == 'video':
+    lang = st.session_state.language
+    st.subheader(main_topics[lang][0])
+    st.markdown(f\"\"\"\n        <iframe width=\"100%\" height=\"315\" src=\"{videos[lang]}\"\n        frameborder=\"0\" allowfullscreen></iframe>\n    \"\"\", unsafe_allow_html=True)
+    if st.button('🔙 กลับเมนู'):
+        go_to_page('main_menu')
 
-    # หน้า 4: รายชื่อโรค
-    elif topic == main_topics[lang][1]:
-        st.subheader(\"🩺 รายชื่อโรคที่พบบ่อย:\")
-        for disease in neonatal_diseases['th']:  # ปรับตามภาษาถ้าเพิ่มแล้ว
-            st.markdown(f\"- {disease}\")
-        if st.button(\"🔙 กลับเมนู / Back to Menu\"):
-            st.rerun()
+# --- หน้ารายชื่อโรคที่พบบ่อย ---
+elif st.session_state.page == 'disease_list':
+    lang = st.session_state.language
+    st.subheader(main_topics[lang][1])
+    st.markdown(\"🩺 โรคต่างๆในทารกแรกเกิดที่พบบ่อย:\")
+    for disease in neonatal_diseases['th']:
+        st.markdown(f\"- {disease}\")
+    if st.button('🔙 กลับเมนู'):
+        go_to_page('main_menu')
+
+pip install streamlit

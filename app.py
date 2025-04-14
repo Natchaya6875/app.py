@@ -37,8 +37,6 @@ with col4:
         <strong>ภาษากัมพูชา</strong>
     </a>
     """, unsafe_allow_html=True)
-    
-import streamlit as st
 
 st.set_page_config(page_title="แอปแนะนำผู้ปกครอง", page_icon="👶")
 

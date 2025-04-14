@@ -1,101 +1,140 @@
-import streamlit as st
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Newborn Info</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      text-align: center;
+    }
+    .flag {
+      width: 40px;
+      height: 25px;
+      vertical-align: middle;
+    }
+    .language-button, .topic-button, .disease-button {
+      display: block;
+      margin: 10px auto;
+      padding: 10px;
+      width: 300px;
+      font-size: 16px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Page 1: Language Selection -->
+  <div id="page1">
+    <h2>กรุณาเลือกภาษา / Please select a language</h2>
+    <button class="language-button" onclick="selectLanguage('th')">
+      <img src="https://flagcdn.com/th.svg" class="flag"> ภาษาไทย
+    </button>
+    <button class="language-button" onclick="selectLanguage('my')">
+      <img src="https://flagcdn.com/mm.svg" class="flag"> မြန်မာစာ
+    </button>
+    <button class="language-button" onclick="selectLanguage('km')">
+      <img src="https://flagcdn.com/kh.svg" class="flag"> ភាសាខ្មែរ
+    </button>
+    <button class="language-button" onclick="selectLanguage('en')">
+      <img src="https://flagcdn.com/gb.svg" class="flag"> English
+    </button>
+  </div>
 
-st.set_page_config(page_title="เลือกภาษา", layout="centered")
+  <!-- Page 2: Main Topics -->
+  <div id="page2" class="hidden">
+    <h2 id="mainTitle"></h2>
+    <button class="topic-button" onclick="watchVideo()" id="topic1"></button>
+    <button class="topic-button" onclick="goToDiseasesPage()" id="topic2"></button>
+  </div>
 
-st.markdown("<h2 style='text-align: center;'>🌐 กรุณาเลือกภาษา</h2>", unsafe_allow_html=True)
+  <!-- Page 4: Disease List -->
+  <div id="page4" class="hidden">
+    <h2 id="diseaseTitle"></h2>
+    <ul id="diseaseList"></ul>
+    <button onclick="goBackToTopics()">← กลับ / Back</button>
+  </div>
 
-# จัดเป็นตาราง 2x2
-col1, col2 = st.columns(2)
-col3, col4 = st.columns(2)
+  <script>
+    const content = {
+      th: {
+        mainTitle: "กรุณาเลือกหัวข้อ",
+        topic1: "การแนะนำการปฏิบัติตัวแก่ญาติขณะรับใหม่",
+        topic2: "โรคต่างๆในทารกแรกเกิดที่พบบ่อย",
+        videoUrl: "https://example.com/th_video.mp4",
+        diseaseTitle: "โรคต่างๆในทารกแรกเกิดที่พบบ่อย",
+        diseases: ["ความดันเลือดที่ปอดสูง", "ทารกคลอดก่อนกำหนด", "ภาวะเลือดข้น", "ภาวะน้ำตาลในเลือดต่ำ", "ภาวะตัวเหลือง"]
+      },
+      my: {
+        mainTitle: "ခင်ဗျား ရွေးချယ်ရန်ခေါင်းစဉ်",
+        topic1: "လက်ခံနေစဉ်တွင်မိသားစုများအတွက်လမ်းညွှန်ချက်",
+        topic2: "လူနာကလေးငယ်များတွင်တွေ့ရသောရောဂါများ",
+        videoUrl: "https://example.com/my_video.mp4",
+        diseaseTitle: "လူနာကလေးငယ်များတွင်တွေ့ရသောရောဂါများ",
+        diseases: ["အဆုတ်သွေးဖိအားမြင့်", "မချိန်မှီမွေးဖွားခြင်း", "အရောင်ရောင်သွေးများခြင်း", "သွေးရှူခါနီး", "အဝါရောင်ဖြစ်ခြင်း"]
+      },
+      km: {
+        mainTitle: "សូមជ្រើសរើសប្រធានបទ",
+        topic1: "ការណែនាំសម្រាប់គ្រួសារពេលទទួលទារក",
+        topic2: "ជំងឺទូទៅនៅក្នុងទារកកើតថ្មី",
+        videoUrl: "https://example.com/km_video.mp4",
+        diseaseTitle: "ជំងឺទូទៅនៅក្នុងទារកកើតថ្មី",
+        diseases: ["សម្ពាធឈាមខ្ពស់នៅសួត", "ការបង្កើតមុនកំណត់", "ឈាមខាត់ខ្ទង់", "ស្ករឈាមទាប", "ចោលខាងក្រៅ"]
+      },
+      en: {
+        mainTitle: "Please choose a topic",
+        topic1: "Instructions for Relatives upon Admission",
+        topic2: "Common Neonatal Conditions",
+        videoUrl: "https://example.com/en_video.mp4",
+        diseaseTitle: "Common Neonatal Conditions",
+        diseases: ["Pulmonary Hypertension", "Prematurity", "Polycythemia", "Hypoglycemia", "Jaundice"]
+      }
+    };
 
-with col1:
-    st.markdown("""
-    <a href="?lang=th">
-        <img src="https://flagcdn.com/w320/th.png" width="100"><br>
-        <strong>ภาษาไทย</strong>
-    </a>
-    """, unsafe_allow_html=True)
+    let selectedLang = 'th';
 
-with col2:
-    st.markdown("""
-    <a href="?lang=en">
-        <img src="https://flagcdn.com/w320/us.png" width="100"><br>
-        <strong>English</strong>
-    </a>
-    """, unsafe_allow_html=True)
+    function selectLanguage(lang) {
+      selectedLang = lang;
+      document.getElementById('page1').classList.add('hidden');
+      document.getElementById('page2').classList.remove('hidden');
 
-with col3:
-    st.markdown("""
-    <a href="?lang=my">
-        <img src="https://flagcdn.com/w320/mm.png" width="100"><br>
-        <strong>ภาษาพม่า</strong>
-    </a>
-    """, unsafe_allow_html=True)
-
-with col4:
-    st.markdown("""
-    <a href="?lang=kh">
-        <img src="https://flagcdn.com/w320/kh.png" width="100"><br>
-        <strong>ภาษากัมพูชา</strong>
-    </a>
-    """, unsafe_allow_html=True)
-
-st.set_page_config(page_title="แอปแนะนำผู้ปกครอง", page_icon="👶")
-
-st.title("👶 แอปให้คำแนะนำผู้ปกครองทารกแรกเกิด")
-st.write("ยินดีต้อนรับสู่ระบบให้คำแนะนำเบื้องต้นสำหรับพ่อแม่ของทารกที่นอนโรงพยาบาล")
-
-language = st.selectbox("เลือกภาษา", ["ไทย", "อังกฤษ", "พม่า", "กัมพูชา"])
-
-if language == "ไทย":
-    st.subheader("📍 สถานที่")
-    st.write("หอผู้ป่วยทารกแรกเกิดป่วย อาคารเฉลิมพระเกียรติ ตึกกุมารชั้น 3" \
-    "ซึ่งเข้าเยี่ยมได้เฉพาะบิดามารดาเท่านั้น ")
-
-    st.subheader("⏰ เวลาเข้าเยี่ยม")
-    st.write("ทุกวัน เช้า เวลา 07.00 - 08.00 น. บ่าย เวลา 12.00 - 15.00 น. และเย็น เวลา 17.00 - 20.00 น.")
-
-    st.subheader("🧳 สิ่งที่ต้องเตรียมมาให้ทารก")
-    st.write("บัตรประชาชนของพ่อแม่, ทิชชู่, แพมเพิส, น้ำนมที่ปั๊มแล้ว")
-
-    st.subheader("🍼 การบีบเก็บและนำน้ำนมมาส่ง")
-    st.write("เก็บน้ำนมในถุงสะอาด เขียนชื่อ-วันที่ นำส่งห้องเก็บน้ำนมทุกวัน")
-
-    st.subheader("🧾 การแจ้งเกิดและขอใช้สิทธิ์ค่ารักษาพยาบาล")
-    st.write("1.แจ้งที่หน้าห้องคลอด ตึกชลารักษ์ ชั้น1")
-    st.write("2.ติดต่อตึกทารกแรกเกิดป่วย นำเอกสารทั้งหมดไปที่ชั้น 2 ตึกกุมาร ห้องเบอร์ 1 " 
-    "เพื่อทำการเปลี่ยนชื่อ นามสกุล ที่แจ้งเกิดใส่ในเอกสารของโรงพยาบาลแล้วนำเอกสารไปที่ห้องเบอร์ 2 " \
-    "หรือ 3 เพื่อตรวจสอบสิทธิ์ รอรับเอกสารคืน")
-    st.write("3.นำเอกสารกลับมาให้เจ้าหน้าที่ ที่หอผู้ป่วยทารกแรกเกิดป่วย")
-    st.markdown("[🔗 คลิกไปที่เอกสารสิทธิการรักษา](https://drive.google.com/file/d/1Z57VmKNYXjq4gUFkOn7I_7pJLFtHs3UJ/view?usp=sharing)")
-
-    st.subheader("🏥 การตรวจสอบสิทธิการรักษา")
-    st.write("ตรวจสอบที่เว็บไซต์ สปสช. หรือโทร 1330")
-    st.markdown("[ตรวจสอบสิทธิ์รักษา คลิกที่นี่](https://www.nhso.go.th/)")
-
-    st.subheader("📞 การโทรสอบถามอาการ")
-    st.write("โทร 03-893-2225 ต่อ 7")
-else:
-    st.info("ภาษานี้ยังอยู่ในระหว่างการพัฒนา โปรดลองเลือกภาษาไทยก่อนนะคะ 🧸")
-
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background-image: url("https://images.pexels.com/photos/459905/pexels-photo-459905.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1");
-        background-size: cover;
-        background-attachment: fixed;
-        color: black;
+      const langContent = content[lang];
+      document.getElementById('mainTitle').innerText = langContent.mainTitle;
+      document.getElementById('topic1').innerText = langContent.topic1;
+      document.getElementById('topic2').innerText = langContent.topic2;
     }
 
-    /* เปลี่ยนสีตัวอักษรหลัก */
-    .stMarkdown, .stText, .stTitle, .stHeader, .stSubheader, .stDataFrame, .stTextInput {
-        color: black !important;
+    function watchVideo() {
+      const videoUrl = content[selectedLang].videoUrl;
+      window.open(videoUrl, '_blank');
+      setTimeout(() => {
+        document.getElementById('page2').classList.remove('hidden');
+      }, 1000);
     }
 
-    /* เปลี่ยนสีหัวข้อและกล่องข้อความอื่น ๆ */
-    h1, h2, h3, h4, h5, h6, p {
-        color: black !important;
+    function goToDiseasesPage() {
+      const langContent = content[selectedLang];
+      document.getElementById('page2').classList.add('hidden');
+      document.getElementById('page4').classList.remove('hidden');
+
+      document.getElementById('diseaseTitle').innerText = langContent.diseaseTitle;
+      const diseaseList = document.getElementById('diseaseList');
+      diseaseList.innerHTML = '';
+      langContent.diseases.forEach(disease => {
+        const li = document.createElement('li');
+        li.innerText = disease;
+        diseaseList.appendChild(li);
+      });
     }
-    </style>
-""", unsafe_allow_html=True)
+
+    function goBackToTopics() {
+      document.getElementById('page4').classList.add('hidden');
+      document.getElementById('page2').classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -1,140 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Newborn Info</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-      text-align: center;
-    }
-    .flag {
-      width: 40px;
-      height: 25px;
-      vertical-align: middle;
-    }
-    .language-button, .topic-button, .disease-button {
-      display: block;
-      margin: 10px auto;
-      padding: 10px;
-      width: 300px;
-      font-size: 16px;
-    }
-    .hidden {
-      display: none;
-    }
-  </style>
-</head>
-<body>
-  <!-- Page 1: Language Selection -->
-  <div id="page1">
-    <h2>กรุณาเลือกภาษา / Please select a language</h2>
-    <button class="language-button" onclick="selectLanguage('th')">
-      <img src="https://flagcdn.com/th.svg" class="flag"> ภาษาไทย
-    </button>
-    <button class="language-button" onclick="selectLanguage('my')">
-      <img src="https://flagcdn.com/mm.svg" class="flag"> မြန်မာစာ
-    </button>
-    <button class="language-button" onclick="selectLanguage('km')">
-      <img src="https://flagcdn.com/kh.svg" class="flag"> ភាសាខ្មែរ
-    </button>
-    <button class="language-button" onclick="selectLanguage('en')">
-      <img src="https://flagcdn.com/gb.svg" class="flag"> English
-    </button>
-  </div>
+from flask import Flask, render_template, request, redirect, url_for
 
-  <!-- Page 2: Main Topics -->
-  <div id="page2" class="hidden">
-    <h2 id="mainTitle"></h2>
-    <button class="topic-button" onclick="watchVideo()" id="topic1"></button>
-    <button class="topic-button" onclick="goToDiseasesPage()" id="topic2"></button>
-  </div>
+app = Flask(__name__)
 
-  <!-- Page 4: Disease List -->
-  <div id="page4" class="hidden">
-    <h2 id="diseaseTitle"></h2>
-    <ul id="diseaseList"></ul>
-    <button onclick="goBackToTopics()">← กลับ / Back</button>
-  </div>
+# ภาษาและธงชาติ
+languages = {
+    'th': {'name': 'ภาษาไทย', 'flag': '🇹🇭'},
+    'my': {'name': 'မြန်မာစာ', 'flag': '🇲🇲'},
+    'km': {'name': 'ភាសាខ្មែរ', 'flag': '🇰🇭'},
+    'en': {'name': 'English', 'flag': '🇬🇧'}
+}
 
-  <script>
-    const content = {
-      th: {
-        mainTitle: "กรุณาเลือกหัวข้อ",
-        topic1: "การแนะนำการปฏิบัติตัวแก่ญาติขณะรับใหม่",
-        topic2: "โรคต่างๆในทารกแรกเกิดที่พบบ่อย",
-        videoUrl: "https://example.com/th_video.mp4",
-        diseaseTitle: "โรคต่างๆในทารกแรกเกิดที่พบบ่อย",
-        diseases: ["ความดันเลือดที่ปอดสูง", "ทารกคลอดก่อนกำหนด", "ภาวะเลือดข้น", "ภาวะน้ำตาลในเลือดต่ำ", "ภาวะตัวเหลือง"]
-      },
-      my: {
-        mainTitle: "ခင်ဗျား ရွေးချယ်ရန်ခေါင်းစဉ်",
-        topic1: "လက်ခံနေစဉ်တွင်မိသားစုများအတွက်လမ်းညွှန်ချက်",
-        topic2: "လူနာကလေးငယ်များတွင်တွေ့ရသောရောဂါများ",
-        videoUrl: "https://example.com/my_video.mp4",
-        diseaseTitle: "လူနာကလေးငယ်များတွင်တွေ့ရသောရောဂါများ",
-        diseases: ["အဆုတ်သွေးဖိအားမြင့်", "မချိန်မှီမွေးဖွားခြင်း", "အရောင်ရောင်သွေးများခြင်း", "သွေးရှူခါနီး", "အဝါရောင်ဖြစ်ခြင်း"]
-      },
-      km: {
-        mainTitle: "សូមជ្រើសរើសប្រធានបទ",
-        topic1: "ការណែនាំសម្រាប់គ្រួសារពេលទទួលទារក",
-        topic2: "ជំងឺទូទៅនៅក្នុងទារកកើតថ្មី",
-        videoUrl: "https://example.com/km_video.mp4",
-        diseaseTitle: "ជំងឺទូទៅនៅក្នុងទារកកើតថ្មី",
-        diseases: ["សម្ពាធឈាមខ្ពស់នៅសួត", "ការបង្កើតមុនកំណត់", "ឈាមខាត់ខ្ទង់", "ស្ករឈាមទាប", "ចោលខាងក្រៅ"]
-      },
-      en: {
-        mainTitle: "Please choose a topic",
-        topic1: "Instructions for Relatives upon Admission",
-        topic2: "Common Neonatal Conditions",
-        videoUrl: "https://example.com/en_video.mp4",
-        diseaseTitle: "Common Neonatal Conditions",
-        diseases: ["Pulmonary Hypertension", "Prematurity", "Polycythemia", "Hypoglycemia", "Jaundice"]
-      }
-    };
+# ข้อความหัวข้อหลัก
+main_topics = {
+    'th': ['การแนะนำการปฏิบัติตัวแก่ญาติขณะรับใหม่', 'โรคต่างๆในทารกแรกเกิดที่พบบ่อย'],
+    'my': ['သွားရောက်လည်ပတ်သူများအတွက်ညွှန်ကြားချက်', 'လူငယ်ကလေးများတွင်တွေ့ရသောရောဂါများ'],
+    'km': ['ការណែនាំចំពោះសាច់ញាតិក្នុងពេលទទួលទាន', 'ជំងឺដែលជួបប្រទៈញឹកញាប់នៅក្នុងទារក'],
+    'en': ['Guidance for Relatives During Admission', 'Common Neonatal Diseases']
+}
 
-    let selectedLang = 'th';
+# วิดีโอตามภาษา
+videos = {
+    'th': 'https://www.youtube.com/embed/thai_video_id',
+    'my': 'https://www.youtube.com/embed/myanmar_video_id',
+    'km': 'https://www.youtube.com/embed/khmer_video_id',
+    'en': 'https://www.youtube.com/embed/english_video_id'
+}
 
-    function selectLanguage(lang) {
-      selectedLang = lang;
-      document.getElementById('page1').classList.add('hidden');
-      document.getElementById('page2').classList.remove('hidden');
+# รายชื่อโรค
+neonatal_diseases = {
+    'th': [
+        'ความดันเลือดที่ปอดสูง',
+        'ทารกคลอดก่อนกำหนด',
+        'ภาวะเลือดข้น',
+        'ภาวะน้ำตาลในเลือดต่ำ',
+        'ภาวะตัวเหลือง'
+    ]
+    # สามารถเพิ่มภาษาอื่นได้ในภายหลัง
+}
 
-      const langContent = content[lang];
-      document.getElementById('mainTitle').innerText = langContent.mainTitle;
-      document.getElementById('topic1').innerText = langContent.topic1;
-      document.getElementById('topic2').innerText = langContent.topic2;
-    }
+@app.route('/')
+def index():
+    return render_template('index.html', languages=languages)
 
-    function watchVideo() {
-      const videoUrl = content[selectedLang].videoUrl;
-      window.open(videoUrl, '_blank');
-      setTimeout(() => {
-        document.getElementById('page2').classList.remove('hidden');
-      }, 1000);
-    }
+@app.route('/menu/<lang>')
+def menu(lang):
+    return render_template('menu.html', lang=lang, topics=main_topics[lang])
 
-    function goToDiseasesPage() {
-      const langContent = content[selectedLang];
-      document.getElementById('page2').classList.add('hidden');
-      document.getElementById('page4').classList.remove('hidden');
+@app.route('/video/<lang>')
+def video(lang):
+    return render_template('video.html', lang=lang, video_url=videos[lang])
 
-      document.getElementById('diseaseTitle').innerText = langContent.diseaseTitle;
-      const diseaseList = document.getElementById('diseaseList');
-      diseaseList.innerHTML = '';
-      langContent.diseases.forEach(disease => {
-        const li = document.createElement('li');
-        li.innerText = disease;
-        diseaseList.appendChild(li);
-      });
-    }
+@app.route('/diseases/<lang>')
+def diseases(lang):
+    return render_template('diseases.html', lang=lang, diseases=neonatal_diseases['th'])
 
-    function goBackToTopics() {
-      document.getElementById('page4').classList.add('hidden');
-      document.getElementById('page2').classList.remove('hidden');
-    }
-  </script>
-</body>
-</html>
+if __name__ == '__main__':
+    app.run(debug=True)
